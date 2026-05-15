@@ -57,12 +57,15 @@ def reindex(df, bipartite=True):
   return new_df
 
 
-def run(data_name, bipartite=True):
-  Path("data/").mkdir(parents=True, exist_ok=True)
-  PATH = './data/{}.csv'.format(data_name)
-  OUT_DF = './data/ml_{}.csv'.format(data_name)
-  OUT_FEAT = './data/ml_{}.npy'.format(data_name)
-  OUT_NODE_FEAT = './data/ml_{}_node.npy'.format(data_name)
+def run(data_name, bipartite=True, input_dir='data', output_dir='data'):
+  input_dir = Path(input_dir)
+  output_dir = Path(output_dir)
+  output_dir.mkdir(parents=True, exist_ok=True)
+
+  PATH = input_dir / '{}.csv'.format(data_name)
+  OUT_DF = output_dir / 'ml_{}.csv'.format(data_name)
+  OUT_FEAT = output_dir / 'ml_{}.npy'.format(data_name)
+  OUT_NODE_FEAT = output_dir / 'ml_{}_node.npy'.format(data_name)
 
   df, feat = preprocess(PATH)
   new_df = reindex(df, bipartite)
@@ -81,7 +84,11 @@ parser = argparse.ArgumentParser('Interface for TGN data preprocessing')
 parser.add_argument('--data', type=str, help='Dataset name (eg. wikipedia or reddit)',
                     default='wikipedia')
 parser.add_argument('--bipartite', action='store_true', help='Whether the graph is bipartite')
+parser.add_argument('--input-dir', type=str, default='data',
+                    help='Directory containing the raw <data>.csv file')
+parser.add_argument('--output-dir', type=str, default='data',
+                    help='Directory where ml_<data> files will be written')
 
 args = parser.parse_args()
 
-run(args.data, bipartite=args.bipartite)
+run(args.data, bipartite=args.bipartite, input_dir=args.input_dir, output_dir=args.output_dir)
