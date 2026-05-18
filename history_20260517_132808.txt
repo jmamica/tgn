@@ -1,0 +1,35 @@
+    1  source /opt/pytorch/bin/activate
+    2  cd /data
+    3  cd work
+    4  cd rossi
+    5  ls
+    6  cd tgn
+    7  ls
+    8  cd data
+    9  ls
+   10  python3 -m venv .venv
+   11  source .venv/bin/activate
+   12  python train_self_supervised.py --use_memory --prefix tgn-attn --n_runs 10
+   13  cd ..
+   14  python train_self_supervised.py --use_memory --prefix tgn-attn --n_runs 10
+   15  cat > requirements.txt <<'EOF'
+pandas==1.1.0
+torch==1.6.0
+scikit-learn==0.23.1
+EOF
+
+   16  python -m pip install -r requirements.txt
+   17  deactivate
+   18  sudo apt update
+   19  sudo apt install -y python3.8 python3.8-venv python3.8-dev
+   20  rm -rf .venv
+   21  python3.8 -m venv .venv
+   22  source .venv/bin/activate
+   23  python -m pip install --upgrade "pip<24" setuptools wheel
+   24  python -m pip install -r requirements.txt
+   25  python -c "import pandas, torch, sklearn; print('pandas', pandas.__version__); print('torch', torch.__version__); print('sklearn', sklearn.__version__)"
+   26  python --version
+   27  which python
+   28  python -m pip freeze > requirements.lock.txt
+   29  python -c "import torch; print(torch.__version__); print('cuda available:', torch.cuda.is_available()); print('cuda version:', torch.version.cuda)"
+   30  history > "history_$(date +%Y%m%d_%H%M%S).txt"
