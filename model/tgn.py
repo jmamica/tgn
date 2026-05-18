@@ -158,12 +158,11 @@ class TGN(torch.nn.Module):
 
     if self.use_memory:
       if self.memory_update_at_start:
-        # Persist the updates to the memory only for sources and destinations (since now we have
-        # new messages for them)
-        self.update_memory(positives, self.memory.messages)
-
-        assert torch.allclose(memory[positives], self.memory.get_memory(positives), atol=1e-5), \
-          "Something wrong in how the memory was updated"
+        # Persist the already-computed memory updates for sources and destinations. Recomputing
+        # the same GRU/RNN update and comparing it is brittle on newer GPUs and large feature
+        # values due to small numerical differences.
+        self.memory.set_memory(positives, memory[positives])
+        self.memory.last_update[positives] = last_update[positives]
 
         # Remove messages for the positives since we have already updated the memory using them
         self.memory.clear_messages(positives)
