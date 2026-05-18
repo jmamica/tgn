@@ -1,0 +1,31 @@
+    1  sudo mkdir -p /data
+    2  sudo mount /dev/nvme2n1 /data
+    3  df -h /data
+    4  aws s3 sync "s3://cb-tgn-data/new/rossi/data_raw/" "/data/work/rossi/tgn/data_raw/"
+    5  cd /data/
+    6  cd work
+    7  ls
+    8  sudo mount /dev/nvme2n1 /data
+    9  cd work
+   10  aws s3 sync "s3://cb-tgn-data/new/rossi/data_raw/" "/data/work/rossi/tgn/data_raw/"
+   11  cd rossi/tgn/
+   12  .venv/bin/python
+   13  source .venv/bin/activate
+   14  .venv/bin/python utils/events_parquet_to_csv.py   --max-rows 10000   --print-schema   --shared-node-space   --output data_raw/events_sample.csv   --sort
+   15  sudo apt install -y python3.8 python3.8-venv python3.8-dev
+   16  deactivate
+   17  rm -rf .venv
+   18  python3.8 -m venv .venv
+   19  source .venv/bin/activate
+   20  python -m pip install --upgrade "pip<24" setuptools wheel
+   21  python -m pip install -r requirements.txt
+   22  python --version
+   23  python -c "import torch; print(torch.__version__); print('cuda available:', torch.cuda.is_available()); print('cuda version:', torch.version.cuda)"
+   24  .venv/bin/python utils/events_parquet_to_csv.py   --max-rows 10000   --print-schema   --shared-node-space   --output data_raw/events_sample.csv   --sort
+   25  python pip -m install pyarrow
+   26  python -m pip install pyarrow
+   27  .venv/bin/python utils/events_parquet_to_csv.py   --max-rows 10000   --print-schema   --shared-node-space   --output data_raw/events_sample.csv   --sort
+   28  .venv/bin/python utils/preprocess_data.py   --data events_sample   --input-dir data_raw   --output-dir data
+   29  .venv/bin/python utils/events_parquet_to_csv.py   --shared-node-space   --split-file data_raw/events/splits_5M_v1.json   --output data_raw/events_5M.csv   --sort
+   30  .venv/bin/python utils/preprocess_data.py   --data events_5M   --input-dir data_raw   --output-dir data
+   31  history > "history_$(date +%Y%m%d_%H%M%S).txt"
