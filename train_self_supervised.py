@@ -31,6 +31,8 @@ parser.add_argument('--patience', type=int, default=5, help='Patience for early 
 parser.add_argument('--n_runs', type=int, default=1, help='Number of runs')
 parser.add_argument('--drop_out', type=float, default=0.1, help='Dropout probability')
 parser.add_argument('--gpu', type=int, default=0, help='Idx for the gpu to use')
+parser.add_argument('--log_every', type=int, default=500,
+                    help='Print training progress every N batches. Set to 0 to disable')
 parser.add_argument('--node_dim', type=int, default=100, help='Dimensions of the node embedding')
 parser.add_argument('--time_dim', type=int, default=100, help='Dimensions of the time embedding')
 parser.add_argument('--backprop_every', type=int, default=1, help='Every how many batches to '
@@ -169,6 +171,8 @@ for i in range(args.n_runs):
 
   logger.info('num of training instances: {}'.format(num_instance))
   logger.info('num of batches per epoch: {}'.format(num_batch))
+  print('Training run {}/{}: {} instances, {} batches per epoch'.format(
+    i + 1, args.n_runs, num_instance, num_batch), flush=True)
   idx_list = np.arange(num_instance)
 
   new_nodes_val_aps = []
@@ -191,6 +195,9 @@ for i in range(args.n_runs):
     m_loss = []
 
     logger.info('start {} epoch'.format(epoch))
+    epoch_progress_start = time.time()
+    last_progress_time = epoch_progress_start
+    last_progress_batch = 0
     for k in range(0, num_batch, args.backprop_every):
       loss = 0
       optimizer.zero_grad()
@@ -232,6 +239,28 @@ for i in range(args.n_runs):
       # the start of time
       if USE_MEMORY:
         tgn.memory.detach_memory()
+
+      if args.log_every > 0 and ((k + args.backprop_every) % args.log_every == 0 or
+                                 (k + args.backprop_every) >= num_batch):
+        batches_done = min(k + args.backprop_every, num_batch)
+        elapsed = time.time() - epoch_progress_start
+        window_elapsed = time.time() - last_progress_time
+        batches_in_window = batches_done - last_progress_batch
+        batches_per_second = batches_in_window / max(window_elapsed, 1e-9)
+        remaining_batches = num_batch - batches_done
+        eta_seconds = remaining_batches / max(batches_per_second, 1e-9)
+        recent_loss = np.mean(m_loss[-max(1, min(len(m_loss), args.log_every)):])
+        gpu_memory = ''
+        if device.type == 'cuda':
+          gpu_memory = ', gpu_mem={:.1f}GB'.format(
+            torch.cuda.max_memory_allocated(device) / (1024 ** 3))
+        print('run {}/{} epoch {}/{} batch {}/{} ({:.1f}%) loss={:.4f}, '
+              'elapsed={:.1f}m, eta={:.1f}m, speed={:.2f} batch/s{}'.format(
+                i + 1, args.n_runs, epoch + 1, NUM_EPOCH, batches_done, num_batch,
+                100.0 * batches_done / num_batch, recent_loss, elapsed / 60,
+                eta_seconds / 60, batches_per_second, gpu_memory), flush=True)
+        last_progress_time = time.time()
+        last_progress_batch = batches_done
 
     epoch_time = time.time() - start_epoch
     epoch_times.append(epoch_time)
